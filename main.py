@@ -5,10 +5,9 @@ from config import SERVICE_URLS
 
 app = FastAPI()
 
-# Configuração do CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Ajuste conforme necessário
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -19,7 +18,7 @@ async def proxy(request: Request, service: str, path: str):
     if service not in SERVICE_URLS:
         raise HTTPException(status_code=404, detail="Service not found")
     
-    url = f"{SERVICE_URLS[service]}/{path}"
+    url = f"{SERVICE_URLS[service]}/{service}/{path}"
     async with httpx.AsyncClient() as client:
         if request.method == "GET":
             response = await client.get(url, params=request.query_params)
@@ -39,4 +38,9 @@ async def proxy(request: Request, service: str, path: str):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(
+        "main:app",
+        host="0.0.0.0",
+        port=8000,
+        reload=True,
+    )
