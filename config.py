@@ -1,11 +1,7 @@
 import os
 
 def get_service_url(service_name, dev_port):
-    env = os.getenv("ENV")
-    if env == "development":
-        return f"http://localhost:{dev_port}"
-    else:
-        return f"https://{service_name}.onrender.com"
+    return f"https://{service_name}.onrender.com"
 
 SERVICE_URLS = {
     "auth": get_service_url("authentication-y2qu", 8001),

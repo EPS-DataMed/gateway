@@ -25,20 +25,25 @@ ALGORITHM = "HS256"
 def verify_token(token: str):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        logging.info(f"Token verified: {payload}")
         return payload
     except jwt.ExpiredSignatureError:
+        logging.warning("Token has expired")
         raise HTTPException(status_code=401, detail="Token has expired")
     except jwt.InvalidTokenError:
+        logging.warning("Invalid token")
         raise HTTPException(status_code=401, detail="Invalid token")
 
 security = HTTPBearer()
 
 async def proxy_request(request: Request, service: str, path: str, credentials: HTTPAuthorizationCredentials = None):
     if service not in SERVICE_URLS:
+        logging.error(f"Service not found: {service}")
         raise HTTPException(status_code=404, detail="Service not found")
 
     if service not in ["auth", "user"]:
         if not credentials:
+            logging.warning("Not authenticated")
             raise HTTPException(status_code=403, detail="Not authenticated")
         token = credentials.credentials
         verify_token(token)
@@ -51,6 +56,8 @@ async def proxy_request(request: Request, service: str, path: str, credentials: 
 
 async def forward_request(client: httpx.AsyncClient, request: Request, url: str):
     try:
+        logging.info(f"Forwarding {request.method} request to {url}")
+        
         if request.method == "GET":
             response = await client.get(url, params=request.query_params)
         elif request.method == "POST":
@@ -64,14 +71,17 @@ async def forward_request(client: httpx.AsyncClient, request: Request, url: str)
         elif request.method == "DELETE":
             response = await client.delete(url)
         else:
+            logging.error(f"Method not allowed: {request.method}")
             raise HTTPException(status_code=405, detail="Method not allowed")
 
         response.raise_for_status()
 
         try:
             content = response.json()
+            logging.info(f"Response received with status {response.status_code}: {content}")
         except ValueError:
             content = response.text
+            logging.info(f"Response received with status {response.status_code}: {content}")
 
         return {
             "status_code": response.status_code,
@@ -88,18 +98,21 @@ async def forward_request(client: httpx.AsyncClient, request: Request, url: str)
         raise HTTPException(status_code=504, detail="Gateway Timeout")
 
 @app.api_route("/auth/{path:path}", methods=["GET", "POST", "PUT", "DELETE"])
-@app.api_route("/user/{path:path}", methods=["GET", "POST", "PUT", "DELETE"])
 async def proxy_without_auth(request: Request, path: str):
     service = request.url.path.split('/')[1]
+    logging.info(f"Request received for service: {service}, path: {path}")
     return await proxy_request(request, service, path)
 
+@app.api_route("/user/{path:path}", methods=["GET", "POST", "PUT", "DELETE"])
 @app.api_route("/data/{path:path}", methods=["GET", "POST", "PUT", "DELETE"])
-async def proxy_with_auth(request: Request, service: str, path: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
+async def proxy_with_auth(request: Request, path: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
     service = request.url.path.split('/')[1]
+    logging.info(f"Authenticated request received for service: {service}, path: {path}")
     return await proxy_request(request, service, path, credentials)
 
 if __name__ == "__main__":
     import uvicorn
+    logging.info("Starting server...")
     uvicorn.run(
         "main:app",
         host="0.0.0.0",
