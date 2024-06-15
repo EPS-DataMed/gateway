@@ -1,20 +1,20 @@
-import jwt
 from fastapi import FastAPI, Request, HTTPException, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.middleware.cors import CORSMiddleware
 import httpx
 import logging
-from config import SERVICE_URLS
 import os
+import jwt
+from config import SERVICE_URLS
 
 app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["*"],  
+    allow_headers=["*"],  
 )
 
 logging.basicConfig(level=logging.INFO)
@@ -57,19 +57,28 @@ async def proxy_request(request: Request, service: str, path: str, credentials: 
 async def forward_request(client: httpx.AsyncClient, request: Request, url: str):
     try:
         logging.info(f"Forwarding {request.method} request to {url}")
-        
+
+        headers = {key: value for key, value in request.headers.items() if key != "host"}
+
         if request.method == "GET":
-            response = await client.get(url, params=request.query_params)
+            response = await client.get(url, headers=headers, params=request.query_params)
         elif request.method == "POST":
-            if request.headers.get("Content-Type") == "application/x-www-form-urlencoded":
+            if "multipart/form-data" in headers.get("Content-Type", ""):
                 form = await request.form()
-                response = await client.post(url, data=form)
+                files = {key: value for key, value in form.multi_items() if isinstance(value, UploadFile)}
+                data = {key: value for key, value in form.multi_items() if not isinstance(value, UploadFile)}
+                response = await client.post(url, headers=headers, data=data, files=files)
+            elif headers.get("Content-Type") == "application/x-www-form-urlencoded":
+                form = await request.form()
+                response = await client.post(url, headers=headers, data=form)
             else:
-                response = await client.post(url, json=await request.json())
+                json_data = await request.json()
+                response = await client.post(url, headers=headers, json=json_data)
         elif request.method == "PUT":
-            response = await client.put(url, json=await request.json())
+            json_data = await request.json()
+            response = await client.put(url, headers=headers, json=json_data)
         elif request.method == "DELETE":
-            response = await client.delete(url)
+            response = await client.delete(url, headers=headers)
         else:
             logging.error(f"Method not allowed: {request.method}")
             raise HTTPException(status_code=405, detail="Method not allowed")

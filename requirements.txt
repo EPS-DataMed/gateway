@@ -1,4 +1,5 @@
 fastapi
-uvicorn
 httpx
-pyjwt
+uvicorn
+python-jose[cryptography]
+python-multipart
