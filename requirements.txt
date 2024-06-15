@@ -2,4 +2,5 @@ fastapi==0.88.0
 httpx==0.24.1
 python-jose==3.3.0
 pyjwt==2.4.0
-uvicorn==0.22.0
+uvicorn==0.29.0
+python-dotenv==1.0.1
