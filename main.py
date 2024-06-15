@@ -4,8 +4,8 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.middleware.cors import CORSMiddleware
 import httpx
 import logging
-from config import SERVICE_URLS
 import os
+from config import SERVICE_URLS
 
 app = FastAPI()
 
@@ -47,27 +47,35 @@ async def proxy_request(request: Request, service: str, path: str, credentials: 
             raise HTTPException(status_code=403, detail="Not authenticated")
         token = credentials.credentials
         verify_token(token)
-    
+
     url = f"{SERVICE_URLS[service]}/{service}/{path}"
     logging.info(f"Proxying request to URL: {url}")
-    
-    async with httpx.AsyncClient(timeout=30.0, follow_redirects=True) as client:
+
+    async with httpx.AsyncClient(timeout=120.0) as client:
         return await forward_request(client, request, url)
 
 async def forward_request(client: httpx.AsyncClient, request: Request, url: str):
     try:
         logging.info(f"Forwarding {request.method} request to {url}")
-        
+
         if request.method == "GET":
             response = await client.get(url, params=request.query_params)
         elif request.method == "POST":
-            if request.headers.get("Content-Type") == "application/x-www-form-urlencoded":
+            content_type = request.headers.get("Content-Type")
+            logging.info(f"Content-Type: {content_type}")
+
+            if content_type == "application/x-www-form-urlencoded":
                 form = await request.form()
                 response = await client.post(url, data=form)
-            else:
+            elif content_type == "application/json":
                 response = await client.post(url, json=await request.json())
+            else:
+                response = await client.post(url, content=await request.body())
         elif request.method == "PUT":
-            response = await client.put(url, json=await request.json())
+            if request.headers.get("Content-Type") == "application/json":
+                response = await client.put(url, json=await request.json())
+            else:
+                response = await client.put(url, content=await request.body())
         elif request.method == "DELETE":
             response = await client.delete(url)
         else:
