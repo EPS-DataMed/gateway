@@ -41,7 +41,7 @@ async def proxy_request(request: Request, service: str, path: str, credentials: 
         logging.error(f"Service not found: {service}")
         raise HTTPException(status_code=404, detail="Service not found")
 
-    if service not in ["auth", "user"]:
+    if service not in ["auth", "term"]:
         if not credentials:
             logging.warning("Not authenticated")
             raise HTTPException(status_code=403, detail="Not authenticated")
@@ -105,6 +105,8 @@ async def forward_request(client: httpx.AsyncClient, request: Request, url: str)
         logging.error(f"Request to {url} timed out.")
         raise HTTPException(status_code=504, detail="Gateway Timeout")
 
+
+@app.api_route("/term/{path:path}", methods=["GET", "POST", "PUT", "DELETE"])
 @app.api_route("/auth/{path:path}", methods=["GET", "POST", "PUT", "DELETE"])
 async def proxy_without_auth(request: Request, path: str):
     service = request.url.path.split('/')[1]
@@ -113,6 +115,7 @@ async def proxy_without_auth(request: Request, path: str):
 
 @app.api_route("/user/{path:path}", methods=["GET", "POST", "PUT", "DELETE"])
 @app.api_route("/data/{path:path}", methods=["GET", "POST", "PUT", "DELETE"])
+@app.api_route("/file/{path:path}", methods=["GET", "POST", "PUT", "DELETE"])
 async def proxy_with_auth(request: Request, path: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
     service = request.url.path.split('/')[1]
     logging.info(f"Authenticated request received for service: {service}, path: {path}")
