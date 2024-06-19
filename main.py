@@ -76,6 +76,11 @@ async def forward_request(client: httpx.AsyncClient, request: Request, url: str)
                 response = await client.put(url, json=await request.json())
             else:
                 response = await client.put(url, content=await request.body())
+        elif request.method == "PATCH":
+            if request.headers.get("Content-Type") == "application/json":
+                response = await client.patch(url, json=await request.json())
+            else:
+                response = await client.patch(url, content=await request.body())
         elif request.method == "DELETE":
             response = await client.delete(url)
         else:
@@ -113,7 +118,7 @@ async def proxy_without_auth(request: Request, path: str):
     logging.info(f"Request received for service: {service}, path: {path}")
     return await proxy_request(request, service, path)
 
-@app.api_route("/user/{path:path}", methods=["GET", "POST", "PUT", "DELETE"])
+@app.api_route("/user/{path:path}", methods=["GET", "POST", "PUT", "PATCH", "DELETE"])
 @app.api_route("/data/{path:path}", methods=["GET", "POST", "PUT", "DELETE"])
 @app.api_route("/file/{path:path}", methods=["GET", "POST", "PUT", "DELETE"])
 async def proxy_with_auth(request: Request, path: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
