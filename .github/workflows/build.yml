@@ -29,6 +29,17 @@ jobs:
           pip install -r requirements.txt
           pip install pytest-cov
 
+      - name: Set environment variables
+        run: |
+          echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> $GITHUB_ENV
+          echo "ALGORITHM=${{ secrets.ALGORITHM }}" >> $GITHUB_ENV
+          echo "AUTH_SERVICE_NAME=${{ secrets.AUTH_SERVICE_NAME }}" >> $GITHUB_ENV
+          echo "USER_SERVICE_NAME=${{ secrets.USER_SERVICE_NAME }}" >> $GITHUB_ENV
+          echo "FILE_SERVICE_NAME=${{ secrets.FILE_SERVICE_NAME }}" >> $GITHUB_ENV
+          echo "DATA_SERVICE_NAME=${{ secrets.DATA_SERVICE_NAME }}" >> $GITHUB_ENV
+          echo "TERM_SERVICE_NAME=${{ secrets.TERM_SERVICE_NAME }}" >> $GITHUB_ENV
+          echo "SERVICE_DOMAIN=${{ secrets.SERVICE_DOMAIN }}" >> $GITHUB_ENV
+
       - name: Run tests and generate coverage report
         run: |
           source venv/bin/activate
@@ -37,7 +48,7 @@ jobs:
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
         env:
-          GITHUB_TOKEN: ${{ secrets.GIT_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
           args: >

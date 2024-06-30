@@ -7,26 +7,19 @@ from main import app, verify_token, forward_request
 from unittest.mock import patch, AsyncMock, MagicMock
 import jwt
 import asyncio
+from dotenv import load_dotenv
+
+load_dotenv()
 
 client = TestClient(app)
 
-# Setup de variáveis de ambiente para testes
-os.environ["SECRET_KEY"] = "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7"
-os.environ["ALGORITHM"] = "HS256"
-os.environ["AUTH_SERVICE_NAME"] = "authentication-kw8k"
-os.environ["USER_SERVICE_NAME"] = "user-service-evf6"
-os.environ["FILE_SERVICE_NAME"] = "file-manager-iuhn"
-os.environ["DATA_SERVICE_NAME"] = "data-processing-otv0"
-os.environ["TERM_SERVICE_NAME"] = "term-service"
-os.environ["SERVICE_DOMAIN"] = "onrender.com"
-
 def test_root():
     response = client.get("/")
-    assert response.status_code == 404  # Assumindo que "/" não está definido em main.py
+    assert response.status_code == 404
 
 @patch("main.SERVICE_URLS", {
-    "auth": "https://authentication-kw8k.onrender.com",
-    "term": "https://term-service.onrender.com"
+    "auth": f"https://{os.getenv('AUTH_SERVICE_NAME')}.{os.getenv('SERVICE_DOMAIN')}",
+    "term": f"https://{os.getenv('TERM_SERVICE_NAME')}.{os.getenv('SERVICE_DOMAIN')}"
 })
 @patch("main.forward_request", new_callable=AsyncMock)
 def test_proxy_without_auth(mock_forward_request):
@@ -35,9 +28,9 @@ def test_proxy_without_auth(mock_forward_request):
     assert response.status_code == 200
 
 @patch("main.SERVICE_URLS", {
-    "user": "https://user-service-evf6.onrender.com",
-    "data": "https://data-processing-otv0.onrender.com",
-    "file": "https://file-manager-iuhn.onrender.com"
+    "user": f"https://{os.getenv('USER_SERVICE_NAME')}.{os.getenv('SERVICE_DOMAIN')}",
+    "data": f"https://{os.getenv('DATA_SERVICE_NAME')}.{os.getenv('SERVICE_DOMAIN')}",
+    "file": f"https://{os.getenv('FILE_SERVICE_NAME')}.{os.getenv('SERVICE_DOMAIN')}"
 })
 @patch("main.verify_token")
 @patch("main.forward_request", new_callable=AsyncMock)
@@ -195,4 +188,3 @@ def test_forward_request_request_error(mock_get):
         assert excinfo.value.detail == "Internal Server Error"
 
     asyncio.run(run_test())
-
