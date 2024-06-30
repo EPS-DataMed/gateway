@@ -125,13 +125,3 @@ async def proxy_with_auth(request: Request, path: str, credentials: HTTPAuthoriz
     service = request.url.path.split('/')[1]
     logging.info(f"Authenticated request received for service: {service}, path: {path}")
     return await proxy_request(request, service, path, credentials)
-
-if __name__ == "__main__":
-    import uvicorn
-    logging.info("Starting server...")
-    uvicorn.run(
-        "main:app",
-        host="0.0.0.0",
-        port=8000,
-        reload=True,
-    )
