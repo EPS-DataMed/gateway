@@ -1,21 +1,12 @@
 version: '3.8'
 
 services:
-  web:
+  app:
     build:
       context: .
-      dockerfile: Dockerfile
     ports:
       - "8000:8000"
-    environment:
-      SECRET_KEY: ${SECRET_KEY}
-      ALGORITHM: ${ALGORITHM}
-      AUTH_SERVICE_NAME: ${AUTH_SERVICE_NAME}
-      USER_SERVICE_NAME: ${USER_SERVICE_NAME}
-      FILE_SERVICE_NAME: ${FILE_SERVICE_NAME}
-      DATA_SERVICE_NAME: ${DATA_SERVICE_NAME}
-      TERM_SERVICE_NAME: ${TERM_SERVICE_NAME}
-      SERVICE_DOMAIN: ${SERVICE_DOMAIN}
+    env_file:
+      - .env
     volumes:
       - .:/app
-    command: uvicorn main:app --host 0.0.0.0 --port 8000

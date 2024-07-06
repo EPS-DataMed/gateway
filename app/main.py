@@ -1,11 +1,11 @@
+import os
 import jwt
 from fastapi import FastAPI, Request, HTTPException, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.middleware.cors import CORSMiddleware
 import httpx
 import logging
-import os
-from config import SERVICE_URLS
+from app.config import SERVICE_URLS
 
 app = FastAPI()
 
