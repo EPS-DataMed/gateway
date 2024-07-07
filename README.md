@@ -4,17 +4,17 @@
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=EPS-DataMed_gateway&metric=coverage)](https://sonarcloud.io/summary/new_code?id=EPS-DataMed_gateway)
 [![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=EPS-DataMed_gateway&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=EPS-DataMed_gateway)
 
-## Descrição do Projeto
+## Descrição do projeto
 
 Este projeto é um API Gateway construído utilizando FastAPI. Ele redireciona requisições para diferentes serviços internos com autenticação baseada em tokens JWT.
 
-## Pré-requisitos
+## Configuração do ambiente de desenvolvimento local
+
+### Pré-requisitos
 
 - Python 3.11 ou superior
 - `venv` para gerenciamento de ambientes virtuais
 - Dependências listadas em `requirements.txt`
-
-## Instalação Local
 
 Siga os passos abaixo para configurar o ambiente de desenvolvimento local:
 
@@ -53,14 +53,17 @@ Siga os passos abaixo para configurar o ambiente de desenvolvimento local:
 
 ### Testes
 
-1. Para rodar os testes:
+1. Para executar os testes, utilize o comando abaixo:
     ```bash
     pytest
     ```
 
-## Docker
+## Configuração do ambiente de desenvolvimento com Docker
 
-### Construir e Executar com Docker
+### Pré-requisitos
+
+- Docker
+- Docker Compose
 
 1. **Configure as variáveis de ambiente (caso ainda não tenha configurado)**
 
@@ -80,4 +83,4 @@ A aplicação estará disponível em `http://127.0.0.1:8000`.
 
 ## Licença
 
-Este projeto está licenciado sob a [MIT License](https://www.mit.edu/~amini/LICENSE.md).
+Este projeto está licenciado sob a [MIT License](./LICENSE).
