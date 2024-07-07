@@ -1,13 +1,13 @@
 import os
+import asyncio
+import jwt
 import pytest
 import httpx
 from fastapi import HTTPException
 from fastapi.testclient import TestClient
-from main import app, verify_token, forward_request
 from unittest.mock import patch, AsyncMock, MagicMock
-import jwt
-import asyncio
 from dotenv import load_dotenv
+from app.main import app, verify_token, forward_request
 
 load_dotenv()
 
@@ -17,23 +17,23 @@ def test_root():
     response = client.get("/")
     assert response.status_code == 404
 
-@patch("main.SERVICE_URLS", {
+@patch("app.main.SERVICE_URLS", {
     "auth": f"https://{os.getenv('AUTH_SERVICE_NAME')}.{os.getenv('SERVICE_DOMAIN')}",
     "term": f"https://{os.getenv('TERM_SERVICE_NAME')}.{os.getenv('SERVICE_DOMAIN')}"
 })
-@patch("main.forward_request", new_callable=AsyncMock)
+@patch("app.main.forward_request", new_callable=AsyncMock)
 def test_proxy_without_auth(mock_forward_request):
     mock_forward_request.return_value = MagicMock(status_code=200, json=MagicMock(return_value={"message": "success"}))
     response = client.get("/term/somepath")
     assert response.status_code == 200
 
-@patch("main.SERVICE_URLS", {
+@patch("app.main.SERVICE_URLS", {
     "user": f"https://{os.getenv('USER_SERVICE_NAME')}.{os.getenv('SERVICE_DOMAIN')}",
     "data": f"https://{os.getenv('DATA_SERVICE_NAME')}.{os.getenv('SERVICE_DOMAIN')}",
     "file": f"https://{os.getenv('FILE_SERVICE_NAME')}.{os.getenv('SERVICE_DOMAIN')}"
 })
-@patch("main.verify_token")
-@patch("main.forward_request", new_callable=AsyncMock)
+@patch("app.main.verify_token")
+@patch("app.main.forward_request", new_callable=AsyncMock)
 def test_proxy_with_auth(mock_forward_request, mock_verify_token):
     mock_verify_token.return_value = {"user_id": 123}
     mock_forward_request.return_value = MagicMock(status_code=200, json=MagicMock(return_value={"message": "success"}))
@@ -59,7 +59,7 @@ def test_verify_token_valid():
     payload = verify_token(valid_token)
     assert payload["user_id"] == 123
 
-@patch("main.httpx.AsyncClient.get", new_callable=AsyncMock)
+@patch("app.main.httpx.AsyncClient.get", new_callable=AsyncMock)
 def test_forward_request_get(mock_get):
     mock_response = MagicMock()
     mock_response.status_code = 200
@@ -78,7 +78,7 @@ def test_forward_request_get(mock_get):
 
     asyncio.run(run_test())
 
-@patch("main.httpx.AsyncClient.post", new_callable=AsyncMock)
+@patch("app.main.httpx.AsyncClient.post", new_callable=AsyncMock)
 def test_forward_request_post(mock_post):
     mock_response = MagicMock()
     mock_response.status_code = 200
@@ -96,7 +96,7 @@ def test_forward_request_post(mock_post):
 
     asyncio.run(run_test())
 
-@patch("main.httpx.AsyncClient.put", new_callable=AsyncMock)
+@patch("app.main.httpx.AsyncClient.put", new_callable=AsyncMock)
 def test_forward_request_put(mock_put):
     mock_response = MagicMock()
     mock_response.status_code = 200
@@ -114,7 +114,7 @@ def test_forward_request_put(mock_put):
 
     asyncio.run(run_test())
 
-@patch("main.httpx.AsyncClient.patch", new_callable=AsyncMock)
+@patch("app.main.httpx.AsyncClient.patch", new_callable=AsyncMock)
 def test_forward_request_patch(mock_patch):
     mock_response = MagicMock()
     mock_response.status_code = 200
@@ -132,7 +132,7 @@ def test_forward_request_patch(mock_patch):
 
     asyncio.run(run_test())
 
-@patch("main.httpx.AsyncClient.delete", new_callable=AsyncMock)
+@patch("app.main.httpx.AsyncClient.delete", new_callable=AsyncMock)
 def test_forward_request_delete(mock_delete):
     mock_response = MagicMock()
     mock_response.status_code = 200
@@ -150,7 +150,7 @@ def test_forward_request_delete(mock_delete):
 
     asyncio.run(run_test())
 
-@patch("main.httpx.AsyncClient.get", new_callable=AsyncMock)
+@patch("app.main.httpx.AsyncClient.get", new_callable=AsyncMock)
 def test_forward_request_http_status_error(mock_get):
     mock_response = MagicMock()
     mock_response.status_code = 404
@@ -172,7 +172,7 @@ def test_forward_request_http_status_error(mock_get):
 
     asyncio.run(run_test())
 
-@patch("main.httpx.AsyncClient.get", new_callable=AsyncMock)
+@patch("app.main.httpx.AsyncClient.get", new_callable=AsyncMock)
 def test_forward_request_request_error(mock_get):
     mock_get.side_effect = httpx.RequestError(
         message="Error",
